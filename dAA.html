@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sorting Algorithm Visualizer - Jivraj 23BCS12589</title>
+  <style>
+    body {
+      background: #12122b;
+      color: #f0f0f0;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    #student-info {
+      background: #00bcd4;
+      color: #12122b;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px rgba(0, 188, 212, 0.6);
+    }
+
+    h1 { color: #00bcd4; }
+
+    #input-area {
+      margin: 20px;
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover { background-color: #0097a7; }
+
+    /* Row container for 2x2 layout */
+    .row-container {
+      display: flex;
+      justify-content: space-between;
+      width: 95%;
+      gap: 20px;
+      margin-top: 25px;
+      flex-wrap: nowrap;
+      min-width: 600px;
+    }
+
+    /* Boxes take roughly half of each row */
+    #bars, #algo-box, #steps-container, #solution-box {
+      flex: 1 1 48%;
+      min-width: 300px;
+      border-radius: 10px;
+      overflow: auto;
+    }
+
+    /* Top row height */
+    #bars, #algo-box { height: 350px; }
+
+    /* Bottom row height */
+    #steps-container, #solution-box { height: 200px; }
+
+    /* Bars container styling */
+    #bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      flex-wrap: nowrap;
+      border: 2px solid #333;
+      background: #1f1f3b;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    /* Algorithm box */
+    #algo-box {
+      background: #1e1e2f;
+      border: 2px solid #00bcd4;
+      padding: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #00e5ff;
+      white-space: pre-wrap;
+    }
+
+    /* Step bubbles container */
+    #steps-container {
+      background: #222244;
+      border: 2px solid #00bcd4;
+      padding: 15px;
+      color: #00e5ff;
+      font-size: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Solution box */
+    #solution-box {
+      background: #1e1e2f;
+      border: 2px solid #00bcd4;
+      padding: 15px;
+      color: #00e5ff;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #ffcc00;
+      min-height: 24px;
+    }
+
+    /* Highlight lines in algorithm */
+    .highlight-line {
+      background: #333;
+      border-left: 3px solid #ffcc00;
+      padding-left: 8px;
+      color: #ffcc00;
+      margin: 4px 0;
+    }
+
+    .bar {
+      margin: 0 5px;
+      width: 50px;
+      height: 50px;
+      background-color: #00bcd4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      transition: all 0.4s ease;
+      flex-shrink: 0;
+      font-size: 16px;
+      box-shadow: 0 0 8px rgba(0,188,212,0.5);
+    }
+
+    .bar.active { background-color: #ff5722; transform: scale(1.3); }
+    .bar.sorted { background-color: #4caf50; }
+
+    /* Step bubbles */
+    .step-label {
+      font-weight: bold;
+      color: #ffcc00;
+      margin-right: 15px;
+      min-width: 60px;
+    }
+
+    .step-bubble {
+      width: 45px;
+      height: 45px;
+      background-color: #00bcd4;
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(0,188,212,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      color: white;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+      cursor: default;
+      user-select: none;
+    }
+
+    .step-bubble.swap {
+      background-color: #ff5722;
+      box-shadow: 0 0 12px #ff5722;
+    }
+
+    .step-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 6px;
+      flex-wrap: nowrap;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="student-info">👨‍💻 Name: Jivraj &nbsp;&nbsp; 🎓 Roll No: 23BCS12589</div>
+  <h1>Sorting Algorithm Visualizer</h1>
+
+  <div id="input-area">
+    <input type="text" id="numbers" placeholder="Enter numbers (e.g. 5,3,8,1,2)" />
+    <select id="algorithm">
+      <option value="bubble">Bubble Sort</option>
+      <option value="merge">Merge Sort</option>
+      <option value="quick">Quick Sort</option>
+    </select>
+    <button onclick="startSorting()">Visualize</button>
+  </div>
+
+  <!-- Top Row: Bars + Algorithm -->
+  <div id="top-row" class="row-container">
+    <div id="bars"></div>
+    <div id="algo-box">🧠 Algorithm will appear and update step-by-step here...</div>
+  </div>
+
+  <!-- Bottom Row: Steps + Solution -->
+  <div id="bottom-row" class="row-container">
+    <div id="steps-container"></div>
+    <div id="solution-box">🧩 Step-by-Step Explanation will appear here...</div>
+  </div>
+
+  <div id="status">Waiting for input...</div>
+
+  <script>
+    const barsContainer = document.getElementById("bars");
+    const algoBox = document.getElementById("algo-box");
+    const solutionBox = document.getElementById("solution-box");
+    const statusText = document.getElementById("status");
+    const stepsContainer = document.getElementById("steps-container");
+    const delay = 800;
+
+    function sleep(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    function createBars(arr) {
+      barsContainer.innerHTML = "";
+      arr.forEach((num) => {
+        const bar = document.createElement("div");
+        bar.classList.add("bar");
+        bar.textContent = num;
+        barsContainer.appendChild(bar);
+      });
+      solutionBox.textContent = "🧩 Step-by-Step Explanation:\n\n";
+      algoBox.textContent = "";
+      stepsContainer.innerHTML = "";
+    }
+
+    function logStep(text) {
+      solutionBox.textContent += text + "\n";
+      solutionBox.scrollTop = solutionBox.scrollHeight;
+    }
+
+    function highlightAlgo(lineText) {
+      algoBox.innerHTML += `<div class='highlight-line'>${lineText}</div>`;
+      algoBox.scrollTop = algoBox.scrollHeight;
+    }
+
+    function addStepBubble(stepNumber, values, swapIndices = []) {
+      const stepGroup = document.createElement("div");
+      stepGroup.className = "step-group";
+
+      const stepLabel = document.createElement("div");
+      stepLabel.className = "step-label";
+      stepLabel.textContent = `Step ${stepNumber}:`;
+      stepGroup.appendChild(stepLabel);
+
+      values.forEach((val, idx) => {
+        const bubble = document.createElement("div");
+        bubble.className = "step-bubble";
+        if (swapIndices.includes(idx)) bubble.classList.add("swap");
+        bubble.textContent = val;
+        stepGroup.appendChild(bubble);
+      });
+
+      stepsContainer.appendChild(stepGroup);
+      stepsContainer.scrollLeft = stepsContainer.scrollWidth;
+    }
+
+    /* ---------- Bubble Sort ---------- */
+    async function bubbleSort(arr) {
+      const bars = document.querySelectorAll(".bar");
+      const n = arr.length;
+      statusText.textContent = "Performing Bubble Sort...";
+      let totalComparisons = 0, totalSwaps = 0;
+      let stepCount = 1;
+
+      for (let i = 0; i < n - 1; i++) {
+        highlightAlgo(`Pass ${i + 1}:`);
+        logStep(`--- Pass ${i + 1} ---`);
+
+        for (let j = 0; j < n - i - 1; j++) {
+          bars[j].classList.add("active");
+          bars[j + 1].classList.add("active");
+          highlightAlgo(`Compare arr[${j}] = ${arr[j]} and arr[${j + 1}] = ${arr[j + 1]}`);
+          logStep(`Compare ${arr[j]} and ${arr[j + 1]}`);
+          totalComparisons++;
+          await sleep(delay);
+
+          if (arr[j] > arr[j + 1]) {
+            highlightAlgo(`Swap because ${arr[j]} > ${arr[j + 1]}`);
+            logStep(`Swap ${arr[j]} and ${arr[j + 1]}`);
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            bars[j].textContent = arr[j];
+            bars[j + 1].textContent = arr[j + 1];
+            totalSwaps++;
+            addStepBubble(stepCount, arr, [j, j + 1]);
+            stepCount++;
+            await sleep(delay);
+          } else {
+            addStepBubble(stepCount, arr);
+            stepCount++;
+          }
+
+          bars[j].classList.remove("active");
+          bars[j + 1].classList.remove("active");
+        }
+        bars[n - 1 - i].classList.add("sorted");
+        highlightAlgo(`End of pass ${i + 1}`);
+      }
+      bars[0].classList.add("sorted");
+
+      const complexity = `
+✅ Bubble Sort Complete!
+Final Array: [${arr.join(", ")}]
+
+Time Complexity:
+- Best Case: O(n)
+- Average Case: O(n^2)
+- Worst Case: O(n^2)
+Space Complexity: O(1)
+Total Comparisons: ${totalComparisons}
+Total Swaps: ${totalSwaps}
+`;
+      logStep(complexity);
+      statusText.textContent = "✅ Bubble Sort Complete!";
+    }
+
+    /* ---------- Merge Sort ---------- */
+    async function mergeSort(arr, start = 0, end = arr.length - 1) {
+      const bars = document.querySelectorAll(".bar");
+      if (start >= end) return;
+
+      let mid = Math.floor((start + end) / 2);
+      await mergeSort(arr, start, mid);
+      await mergeSort(arr, mid + 1, end);
+
+      let left = arr.slice(start, mid + 1);
+      let right = arr.slice(mid + 1, end + 1);
+      let i = 0, j = 0, k = start;
+
+      highlightAlgo(`Merge subarrays arr[${start}-${mid}] and arr[${mid + 1}-${end}]`);
+
+      while (i < left.length && j < right.length) {
+        bars[k].classList.add("active");
+        await sleep(delay);
+        if (left[i] <= right[j]) { arr[k] = left[i]; bars[k].textContent = left[i]; i++; } 
+        else { arr[k] = right[j]; bars[k].textContent = right[j]; j++; }
+        bars[k].classList.remove("active");
+        logStep(`Set arr[${k}] = ${arr[k]}`);
+        addStepBubble(k + 1, arr);
+        k++;
+      }
+
+      while (i < left.length) {
+        bars[k].classList.add("active");
+        await sleep(delay);
+        arr[k] = left[i]; bars[k].textContent = left[i]; bars[k].classList.remove("active");
+        logStep(`Set arr[${k}] = ${arr[k]}`);
+        addStepBubble(k + 1, arr);
+        i++; k++;
+      }
+
+      while (j < right.length) {
+        bars[k].classList.add("active");
+        await sleep(delay);
+        arr[k] = right[j]; bars[k].textContent = right[j]; bars[k].classList.remove("active");
+        logStep(`Set arr[${k}] = ${arr[k]}`);
+        addStepBubble(k + 1, arr);
+        j++; k++;
+      }
+
+      if (start === 0 && end === arr.length - 1) {
+        Array.from(bars).forEach((b) => b.classList.add("sorted"));
+        const complexity = `
+✅ Merge Sort Complete!
+Final Array: [${arr.join(", ")}]
+
+Time Complexity:
+- Best Case: O(n log n)
+- Average Case: O(n log n)
+- Worst Case: O(n log n)
+Space Complexity: O(n)
+`;
+        logStep(complexity);
+        statusText.textContent = "✅ Merge Sort Complete!";
+      }
+    }
+
+    /* ---------- Quick Sort ---------- */
+    async function quickSort(arr, low = 0, high = arr.length - 1) {
+      const bars = document.querySelectorAll(".bar");
+      if (low >= high) return;
+
+      let pivot = arr[high];
+      highlightAlgo(`Pivot = arr[${high}] = ${pivot}`);
+      let i = low - 1;
+
+      for (let j = low; j < high; j++) {
+        bars[j].classList.add("active");
+        bars[high].classList.add("active");
+        await sleep(delay);
+        if (arr[j] <= pivot) {
+          i++;
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+          bars[i].textContent = arr[i];
+          bars[j].textContent = arr[j];
+          logStep(`Swap ${arr[i]} and ${arr[j]}`);
+          addStepBubble(i + 1, arr, [i, j]);
+          await sleep(delay);
+        } else addStepBubble(j + 1, arr);
+        bars[j].classList.remove("active");
+        bars[high].classList.remove("active");
+      }
+
+      [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+      bars[i + 1].textContent = arr[i + 1];
+      bars[high].textContent = arr[high];
+      bars[i + 1].classList.add("sorted");
+      logStep(`Place pivot ${pivot} at index ${i + 1}`);
+      addStepBubble(i + 2, arr, [i + 1, high]);
+      await sleep(delay);
+
+      await quickSort(arr, low, i);
+      await quickSort(arr, i + 2, high);
+
+      if (low === 0 && high === arr.length - 1) {
+        Array.from(bars).forEach((b) => b.classList.add("sorted"));
+        const complexity = `
+✅ Quick Sort Complete!
+Final Array: [${arr.join(", ")}]
+
+Time Complexity:
+- Best Case: O(n log n)
+- Average Case: O(n log n)
+- Worst Case: O(n^2)
+Space Complexity: O(log n)
+`;
+        logStep(complexity);
+        statusText.textContent = "✅ Quick Sort Complete!";
+      }
+    }
+
+    async function startSorting() {
+      let input = document.getElementById("numbers").value.trim();
+      if (!input) return alert("Please enter numbers separated by commas!");
+      let arr = input.split(",").map(Number);
+      createBars(arr);
+      await sleep(800);
+
+      const algo = document.getElementById("algorithm").value;
+      if (algo === "bubble") await bubbleSort(arr);
+      else if (algo === "merge") await mergeSort(arr);
+      else if (algo === "quick") await quickSort(arr);
+    }
+  </script>
+</body>
+</html>
